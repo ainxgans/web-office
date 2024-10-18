@@ -12,15 +12,7 @@ class BookingTransaction extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name',
-        'phone_number',
-        'booking_trx_id',
-        'is_paid',
-        'started_at',
-        'total_amount',
-        'duration',
-        'ended_at',
-        'office_space_id',
+        'name', 'phone_number', 'booking_trx_id', 'is_paid', 'started_at', 'total_amount', 'duration', 'ended_at', 'office_space_id',
     ];
 
     public static function generateUniqueTrxId()

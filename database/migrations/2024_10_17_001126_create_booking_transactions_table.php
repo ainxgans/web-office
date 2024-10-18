@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->date('started_at');
             $table->unsignedInteger('total_amount');
             $table->unsignedInteger('duration');
-            $table->date('ended_a');
+            $table->date('ended_at');
             $table->foreignId('office_space_id')->constrained()->cascadeOnDelete();
             $table->softDeletes();
             $table->timestamps();
