@@ -12,6 +12,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Notifications\Notification;
+use Twilio\Rest\Client;
 
 class BookingTransactionResource extends Resource
 {
@@ -78,6 +80,45 @@ class BookingTransactionResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('approve')
+                    ->label('Approve')
+                    ->action(function (BookingTransaction $record) {
+                        $record->is_paid = true;
+                        $record->save();
+
+                        Notification::make()
+                            ->title('Booking Approved')
+                            ->success()
+                            ->body("Booking with TRX ID: {$record->booking_trx_id} has been approved.")
+                            ->send();
+
+                        $sid = getenv("TWILIO_ACCOUNT_SID");
+                        $token = getenv("TWILIO_AUTH_TOKEN");
+                        $twilio = new Client($sid, $token);
+                        $messageBody = "Hi {$record->name},Pemesanan anda dengan kode Booking TRX ID: {$record->booking_trx_id} sudah terbayar penuh. \n \n";
+                        $messageBody .= "Kami akan menginformasikan kembali status pemesanan Anda secepat mungkin";
+
+                        // mengirim melalui dengan SMS
+                        // $message = $twilio->messages->create(
+                        //     // "+6285156742122",
+                        //     "+{$record->phone_number}",
+                        //     [
+                        //         "body" => $messageBody,
+                        //         "from" => getenv("TWILIO_PHONE_NUMBER")
+                        //     ]
+                        // );
+                        $message = $twilio->messages
+                            ->create(
+                                "whatsapp:+{$record->phone_number}", // to
+                                array(
+                                    "from" => "whatsapp:+14155238886",
+                                    "body" => $messageBody
+                                )
+                            );
+                    })
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn(BookingTransaction $record) => !$record->is_paid),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
